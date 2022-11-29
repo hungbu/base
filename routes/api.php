@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\CKEditorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,4 +22,4 @@ use App\Http\Controllers\Api\UserController;
 
 Route::apiResource('user', UserController::class);
 
-Route::post('ckeditor/image_upload', 'CKEditorController@upload')->name('upload');
+Route::post('ckeditor/image_upload', [CKEditorController::class, 'upload'])->name('upload');

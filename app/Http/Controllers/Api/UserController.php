@@ -7,6 +7,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use League\Flysystem\Config;
 
 class UserController extends Controller
 {
@@ -15,20 +16,42 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
-        return UserResource::collection($users);
-    }
+        $query = User::query();
+        
+        if($request->has('search')) {
+            $s = $request->input('search', '');
+            $query->orWhere('name', 'like', '%' . $s . '%');
+        }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        if($request->has('sort')) {
+            $sort = $request->input('sort', 'ASC');
+            $query->orderBy('price', $sort);
+        }
+
+        $perPage = Config('constant.perPage');
+        $page = 1;
+
+        if($request->has('page')) {
+            $page = $request->input('page', 1);
+        }
+
+        if($request->has('perPage')) {
+            $perPage = $request->input('perPage', Config('constant.perPage'));
+        }
+
+        $total = $query->count();
+
+        $result = $query->offset(($page - 1) * $perPage)->limit($perPage)->get();
+
+        return [
+            'data' => $result,
+            'total' => $total,
+            'page' => $page,
+            'perPage' => $perPage,
+            'last_page' => ceil($total / $perPage)
+        ];
     }
 
     /**
@@ -41,7 +64,7 @@ class UserController extends Controller
     {
         $users = User::create($request->all());
         
-        return new UserResource($users);
+        return UserResource($users);
     }
 
     /**
@@ -52,7 +75,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        //
+        return UserResource($user);
     }
 
     /**
@@ -63,7 +86,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        //
+        return UserResource($user);
     }
 
     /**
